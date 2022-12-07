@@ -1,0 +1,14 @@
+{
+    "name": "api-prototipo",
+    "version": 2,
+    "public": true,
+    
+
+    
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "api/index.js"
+        }
+    ]
+}
