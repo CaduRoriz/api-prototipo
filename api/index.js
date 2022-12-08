@@ -2,19 +2,19 @@
 
 import express from "express";
 import { Router } from "express";
-
 import { createRequire } from "module";
-
 
 
 const require = createRequire(import.meta.url)
 const app = express()
-const route = Router();
+const router = Router();
+
+const Company = require('./models/Company.cjs')
+
 
 const mongoose = require('mongoose')
 
 require('dotenv').config()
-
 
 
 const PORT = 3003
@@ -37,23 +37,43 @@ app.use(function(req, res, next) {
 app.use(express.json())
 
 // initial route/endpoint
-route.get('/', (req,res) => {
+router.get('/', (req,res) => {
     res.json({
         sucess: true,
-        message:"Hello"
+        message:"Hello Proto-capitacao"
     })
 })
 
-route.get('/company', (req,res) => {
-    res.json({
-        sucess: true,
-        message:"Here your companies"
-    })
+router.get('/company', async (req,res) => {
+     //forma de fazer a requisão => /company/?cnae=xxxxx&bairro=Xxxxx | aqui tem a questao da primeira letra ser minúscula
+     const bairro = req.query.bairro;
+     const cnae = req.query.cnae;
+     const limite = req.query.limite;
+ 
+     
+     try{
+         const companies = await Company.find({
+             cnae_fiscal: cnae,
+             bairro
+         }).limit(limite)
+ 
+         if(companies == 0){
+             res.status(422).json({message: 'Nenhum resultado encontrado com essas chaves'});
+         }
+        
+         if(!companies){
+             res.status(422).json({message: 'Não há empresas com esse cnae nesse bairro'});
+             return
+         }
+         res.status(200).json(companies)
+     }catch(error) {
+         res.status(500).json({error:error})
+     }
 })
 
 
 
-app.use(route)
+app.use(router)
 
 // giving te PORT
 
@@ -67,6 +87,3 @@ mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD
 })
 .catch((err) => console.log(err))
 
-// app.listen(PORT, () => {
-//     console.log("Server is running in " + PORT)
-// })
